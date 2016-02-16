@@ -18,6 +18,9 @@ urlpatterns = [
     url('^search/$', forum_views.search, name='search'),
     url('^misc/$', forum_views.misc, name='misc'),
 
+    # Review topics and posts by moderator
+    url('^review/$', forum_views.review_content, name='review'),
+
     # User
     url('^user/(?P<username>.*)/upload_avatar/$', forum_views.upload_avatar, {
         'form_class': UploadAvatarForm,

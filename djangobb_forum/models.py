@@ -131,6 +131,7 @@ class Topic(models.Model):
     subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='subscriptions', verbose_name=_('Subscribers'), blank=True)
     post_count = models.IntegerField(_('Post count'), blank=True, default=0)
     last_post = models.ForeignKey('Post', related_name='last_topic_post', blank=True, null=True)
+    is_moderated =  models.BooleanField(_('Moderated'), blank=True, default=False)
 
     class Meta:
         ordering = ['-updated']
@@ -206,6 +207,7 @@ class Post(models.Model):
     body_html = models.TextField(_('HTML version'))
     user_ip = models.GenericIPAddressField(_('User IP'), blank=True, null=True)
     archived = models.BooleanField(_('Archived'), blank=True, default=False)
+    is_moderated =  models.BooleanField(_('Moderated'), blank=True, default=False)
 
     class Meta:
         ordering = ['created']

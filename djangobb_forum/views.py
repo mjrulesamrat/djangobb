@@ -116,6 +116,27 @@ def moderate(request, forum_id):
     else:
         raise Http404
 
+# Added by Jay Modi
+@transaction.atomic
+def review_content(request):
+    """
+    :param request:
+    :return: render to review page or 404
+    """
+    topics = Topic.objects.filter(is_moderated=False)
+    posts = Post.objects.filter(is_moderated=False).values_list('topic', flat=True).distinct()
+    topics = Topic.objects.filter(pk__in=posts)
+    print len(topics)
+    print topics, "<----"
+    try:
+        if request.user.is_superuser or request.user in user.groups.filter(name='topic_moderator').exists():
+            return render(request, 'djangobb_forum/review.html', {
+                'topics_page': get_page(topics, request, forum_settings.FORUM_PAGE_SIZE)
+            })
+        else:
+            raise Http404
+    except Exception as e:
+        raise Http404
 
 def search(request):
     # TODO: used forms in every search type
