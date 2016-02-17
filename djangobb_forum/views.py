@@ -658,11 +658,16 @@ def edit_post(request, post_id):
 
     post = get_object_or_404(Post, pk=post_id)
     topic = post.topic
+    forum = post.topic.forum
     if not forum_editable_by(post, request.user):
         messages.error(request, _("No permissions to edit this post."))
         return HttpResponseRedirect(post.get_absolute_url())
     form = build_form(EditPostForm, request, topic=topic, instance=post)
     if form.is_valid():
+        if request.user.is_superuser or request.user in user.groups.filter(name='topic_moderator').exists():
+            if not post.is_moderated:
+                post.is_moderated = True
+                LOG.info("{0} edited & moderated the Post '{1}' from '{2}:{3}'".format(request.user.username, post.body, forum.name, topic.name))
         post = form.save(commit=False)
         post.updated_by = request.user
         post.save()
