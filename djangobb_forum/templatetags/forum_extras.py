@@ -290,8 +290,12 @@ def set_theme_style(user):
         theme=selected_theme
     )
 
-
 @register.filter(name='has_permission')
 def has_permission(user, permission):
     permission_name = 'djangobb_forum.{0}'.format(permission)
     return True if user.has_perm(permission_name) else False
+
+@register.filter(name='has_group')
+def has_group(user, group_name):
+    group = Group.objects.get(name=group_name)
+    return True if group in user.groups.all() else False
