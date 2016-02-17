@@ -126,8 +126,6 @@ def review_content(request):
     topics = Topic.objects.filter(is_moderated=False)
     posts = Post.objects.filter(is_moderated=False).values_list('topic', flat=True).distinct()
     topics = Topic.objects.filter(pk__in=posts)
-    print len(topics)
-    print topics, "<----"
     try:
         if request.user.is_superuser or request.user in user.groups.filter(name='topic_moderator').exists():
             return render(request, 'djangobb_forum/review.html', {
@@ -833,9 +831,44 @@ def archive_post(request, post_id):
             return HttpResponseRedirect(post.get_absolute_url())
 
         post.archived = True
+        if not post.is_moderated:
+            post.is_moderated = True
+            messages.success(request, _("Post archived and Moderated."))
+            LOG.info("{0} Moderated & archived the Post '{1}' from '{2}:{3}'".format(request.user.username, post.body, forum.name, topic.name))
+        else:
+            messages.success(request, _("Post archived."))
+            LOG.info("{0} archived the Post '{1}' from '{2}:{3}'".format(request.user.username, post.body, forum.name, topic.name))
         post.save()
-        messages.success(request, _("Post archived."))
-        LOG.info("{0} archived the Post '{1}' from '{2}:{3}'".format(request.user.username, post.body, forum.name, topic.name))
+
+    try:
+        Topic.objects.get(pk=topic.id)
+    except Topic.DoesNotExist:
+        #removed latest post in topic
+        return HttpResponseRedirect(forum.get_absolute_url())
+    else:
+        return HttpResponseRedirect(topic.get_absolute_url())
+
+
+@login_required
+@transaction.atomic
+def looks_okay(request, post_id):
+    """
+    Moderator can Archive posts.
+    This post will be visible to user who added it and also to other moderators.
+    """
+    post = get_object_or_404(Post, pk=post_id)
+    topic = post.topic
+    forum = post.topic.forum
+    if not (request.user.is_superuser or\
+        request.user in post.topic.forum.moderators.all() or \
+        (post.user == request.user) or request.user.has_perm('djangobb_forum.can_archive_post')):
+        messages.success(request, _("You haven't the permission to unarchive this post."))
+        return HttpResponseRedirect(post.get_absolute_url())
+
+    post.is_moderated = True
+    post.save()
+    messages.success(request, _("Post is Moderated."))
+    LOG.info("{0} moderated the Post '{1}' from '{2}:{3}'".format(request.user.username, post.body, forum.name, topic.name))
     try:
         Topic.objects.get(pk=topic.id)
     except Topic.DoesNotExist:

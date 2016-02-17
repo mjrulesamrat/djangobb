@@ -49,6 +49,15 @@
 </div>
 {% endif %}
 
+<!--Added by Jay Modi
+	Used to highlight posts those in need to moderate
+-->
+<style>
+	.postleft_moderate{
+		BACKGROUND-COLOR:#FFF8DC !important;
+	}
+</style>
+
 {% for post in posts %}
     {% if not post.archived or moderator or user|has_permission:"can_archive_post" %}
 	    <div id="p{{ post.id }}" class="blockpost roweven firstpost">
@@ -118,7 +127,7 @@
 			<div class="postright">
 				<h3>{{ post.topic.name }}</h3>
 				<div class="postmsg">
-					<p class="post_body_html">{{ post.body_html|safe }}</p>
+					<p class="post_body_html {% if not post.is_moderated %}postleft_moderate{% endif %}">{{ post.body_html|safe }}</p>
 					{% if not user.is_authenticated or user.forum_profile.show_signatures %}
 						{% if post.user.forum_profile.signature_html %}
 						<div class="postsignature">
@@ -151,6 +160,9 @@
 				<ul>
 					<li class="postreport"><a href="{% url 'djangobb:misc' %}?action=report&amp;post_id={{ post.id }}">{% trans "Report" %}</a> </li>
                     {% if moderator or user|has_permission:"can_archive_post" %}
+                    	{% if not post.is_moderated %}
+	                    	<li class="postarchive">| <a href="{% url 'djangobb:looks_okay' post.id %}">{% trans "Looks Okay" %}</a> </li>
+                    	{% endif %}
                         {% if post.archived %}
 						    <li class="postarchive">| <a href="{% url 'djangobb:archive_post' post.id %}">{% trans "Unarchive" %}</a> </li>
 					    {% else %}
