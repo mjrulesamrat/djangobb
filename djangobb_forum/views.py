@@ -123,7 +123,6 @@ def review_content(request):
     :param request:
     :return: render to review page or 404
     """
-    topics = Topic.objects.filter(is_moderated=False)
     posts = Post.objects.filter(is_moderated=False).values_list('topic', flat=True).distinct()
     topics = Topic.objects.filter(pk__in=posts)
     try:
